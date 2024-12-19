@@ -69,7 +69,7 @@ function initializeWebSocket() {
 
     ws.onclose = (event) => {
         console.error('WebSocket closed. Reconnecting...', event.reason);
-        setTimeout(initializeWebSocket, 3000); // Reconnect after 3 seconds
+        setTimeout(initializeWebSocket, 9876); // Reconnect after 3 seconds
     };
 
     ws.onerror = (error) => {
