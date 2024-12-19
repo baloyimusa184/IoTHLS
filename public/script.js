@@ -48,7 +48,7 @@ let ws;
 let wsInitialized = false;
 
 function initializeWebSocket() {
-    ws = new WebSocket('ws://localhost:3001');
+    ws = new WebSocket('ws://localhost:9876');
 
     ws.onopen = () => {
         console.log('WebSocket connection opened');
