@@ -10,7 +10,7 @@ import { WebSocketServer } from 'ws';
 import http from 'http';
 
 const app = express();
-const port = 3000;
+const port = 9876;
 
 // Middleware
 app.use(bodyParser.json());
