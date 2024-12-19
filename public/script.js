@@ -8,7 +8,7 @@ document.getElementById('registerForm')?.addEventListener('submit', async (event
         const response = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ username, pass: password }), // Updated field name
         });
 
         const result = await response.json();
@@ -28,7 +28,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (event) =
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ username, pass: password }), // Updated field name
         });
 
         const result = await response.json();
@@ -43,7 +43,32 @@ document.getElementById('loginForm')?.addEventListener('submit', async (event) =
         console.error('Error during login:', err);
     }
 });
+wss.on('connection', (ws) => {
+    console.log('New WebSocket client connected');
+    connectedClients.push(ws);
 
+    ws.on('message', (data) => {
+        try {
+            const messageData = JSON.parse(data);
+
+            // Broadcast the message to all connected clients
+            connectedClients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(messageData));
+                }
+            });
+        } catch (err) {
+            console.error('Error processing message:', err);
+        }
+    });
+
+    ws.on('close', () => {
+        console.log('Client disconnected');
+        connectedClients = connectedClients.filter((client) => client !== ws); // Remove disconnected client
+    });
+});
+
+/*
 let ws;
 let wsInitialized = false;
 
@@ -134,3 +159,5 @@ document.getElementById('deleteAccountButton')?.addEventListener('click', async 
         }
     }
 });
+
+*/

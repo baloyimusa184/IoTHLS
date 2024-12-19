@@ -30,7 +30,7 @@ dbPromise.then((db) =>
 
 // **Register**
 app.post('/api/register', async (req, res) => {
-    const { username, pass } = req.body;
+    const { username, pass } = req.body; // Use correct field name
     try {
         const db = await dbPromise;
         const existingUser = await db.get('SELECT * FROM users WHERE username = ?', [username]);
@@ -40,13 +40,14 @@ app.post('/api/register', async (req, res) => {
         await db.run('INSERT INTO users (username, pass) VALUES (?, ?)', [username, hashedPassword]);
         res.status(201).json({ message: 'Registration successful' });
     } catch (err) {
+        console.error('Error during registration:', err); // Add detailed logging
         res.status(500).json({ error: 'Server error' });
     }
 });
 
 // **Login**
 app.post('/api/login', async (req, res) => {
-    const { username, pass } = req.body;
+    const { username, pass } = req.body; // Use correct field name
     try {
         const db = await dbPromise;
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
@@ -57,9 +58,11 @@ app.post('/api/login', async (req, res) => {
 
         res.json({ userId: user.id });
     } catch (err) {
+        console.error('Error during login:', err); // Add detailed logging
         res.status(500).json({ error: 'Server error' });
     }
 });
+
 
 // **Delete Account**
 app.delete('/api/users/:id', async (req, res) => {
