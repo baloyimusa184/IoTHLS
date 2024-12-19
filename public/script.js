@@ -1,36 +1,36 @@
 // Register
 document.getElementById('registerForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const username = document.getElementById('registerUsername').value;
-    const pass = document.getElementById('registerPassword').value;
-  
+    const username = document.getElementById('registerUsername').value.trim();
+    const password = document.getElementById('registerPassword').value.trim();
+
     try {
         const response = await fetch('/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, pass }),
+            body: JSON.stringify({ username, password }),
         });
-  
+
         const result = await response.json();
         alert(response.ok ? result.message : result.error);
     } catch (err) {
-        console.error(err);
+        console.error('Error during registration:', err);
     }
-  });
-  
-  // Login
-  document.getElementById('loginForm')?.addEventListener('submit', async (event) => {
+});
+
+// Login
+document.getElementById('loginForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const username = document.getElementById('loginUsername').value;
-    const pass = document.getElementById('loginPassword').value;
-  
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+
     try {
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, pass }),
+            body: JSON.stringify({ username, password }),
         });
-  
+
         const result = await response.json();
         if (response.ok) {
             sessionStorage.setItem('userId', result.userId);
@@ -40,20 +40,84 @@ document.getElementById('registerForm')?.addEventListener('submit', async (event
             alert(result.error);
         }
     } catch (err) {
-        console.error(err);
+        console.error('Error during login:', err);
     }
-  });
-  
-  // Logout
-  document.getElementById('logoutButton')?.addEventListener('click', () => {
+});
+
+let ws;
+let wsInitialized = false;
+
+function initializeWebSocket() {
+    ws = new WebSocket('ws://localhost:3001');
+
+    ws.onopen = () => {
+        console.log('WebSocket connection opened');
+        const username = sessionStorage.getItem('username');
+        if (username) {
+            ws.send(JSON.stringify({ sender: 'Server', message: `${username} has joined the chat.` }));
+        }
+    };
+
+    ws.onmessage = (event) => {
+        const messageData = JSON.parse(event.data);
+        const messageDiv = document.createElement('div');
+        const timestamp = new Date(messageData.timestamp).toLocaleTimeString();
+        messageDiv.textContent = `[${timestamp}] ${messageData.sender}: ${messageData.message}`;
+        document.getElementById('chatBox').appendChild(messageDiv);
+        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+    };
+
+    ws.onclose = (event) => {
+        console.error('WebSocket closed. Reconnecting...', event.reason);
+        setTimeout(initializeWebSocket, 3000); // Reconnect after 3 seconds
+    };
+
+    ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+}
+
+if (!wsInitialized) {
+    initializeWebSocket();
+    wsInitialized = true;
+}
+
+function sendMessage(message) {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(message));
+    } else {
+        console.error('WebSocket is not open:', ws.readyState);
+        alert('Unable to send message. WebSocket is disconnected.');
+    }
+}
+
+const sendButton = document.getElementById('sendButton');
+const messageInput = document.getElementById('messageInput');
+const chatBox = document.getElementById('chatBox');
+
+sendButton?.addEventListener('click', () => {
+    const message = {
+        sender: sessionStorage.getItem('username'),
+        message: messageInput.value.trim(),
+    };
+
+    if (message.message) {
+        sendMessage(message);
+        messageInput.value = ''; // Clear input field after sending
+    }
+});
+
+document.getElementById('logoutButton')?.addEventListener('click', () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close(); // Close the WebSocket connection
+    }
     sessionStorage.clear();
     window.location.href = '/index.html';
-  });
-  
-  // Delete Account
-  document.getElementById('deleteAccountButton')?.addEventListener('click', async () => {
+});
+
+document.getElementById('deleteAccountButton')?.addEventListener('click', async () => {
     const userId = sessionStorage.getItem('userId');
-  
+
     if (confirm('Are you sure you want to delete your account?')) {
         try {
             const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
@@ -66,57 +130,7 @@ document.getElementById('registerForm')?.addEventListener('submit', async (event
                 alert(result.error);
             }
         } catch (err) {
-            console.error(err);
+            console.error('Error during account deletion:', err);
         }
-    }
-  });
-  let ws;
-
-document.addEventListener('DOMContentLoaded', () => {
-    const chatBox = document.getElementById('chatBox');
-    const chatInput = document.getElementById('chatInput');
-    const sendButton = document.getElementById('sendButton');
-
-    if (sessionStorage.getItem('username')) {
-        const username = sessionStorage.getItem('username');
-
-        // Connect to WebSocket server
-        ws = new WebSocket('ws://localhost:3000');
-
-        ws.onopen = () => {
-            console.log('Connected to WebSocket as:', username);
-        };
-
-        ws.onmessage = (event) => {
-            const messageData = JSON.parse(event.data);
-            const messageDiv = document.createElement('div');
-            messageDiv.textContent = `${messageData.sender}: ${messageData.message}`;
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        };
-
-        ws.onclose = () => {
-            console.log('WebSocket connection closed');
-        };
-
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
-
-        // Send message on button click
-        sendButton?.addEventListener('click', () => {
-            const message = chatInput.value.trim();
-            if (message && ws) {
-                ws.send(JSON.stringify({ sender: username, message }));
-                chatInput.value = ''; // Clear input field after sending
-            }
-        });
-
-        // Send message on Enter key press
-        chatInput?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendButton.click();
-            }
-        });
     }
 });
