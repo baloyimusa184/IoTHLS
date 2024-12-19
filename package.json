@@ -26,7 +26,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "test": "",
-    "start": "node server.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
