@@ -10,9 +10,7 @@ import { WebSocketServer } from 'ws';
 import http from 'http';
 
 const app = express();
-const port = 9876;
-const http = require('http');
-
+const port = 9876; // Port for both Express and WebSocket servers
 
 // Middleware
 app.use(bodyParser.json());
@@ -32,7 +30,7 @@ dbPromise.then((db) =>
 
 // **Register**
 app.post('/api/register', async (req, res) => {
-    const { username, pass } = req.body; // Use correct field name
+    const { username, pass } = req.body;
     try {
         const db = await dbPromise;
         const existingUser = await db.get('SELECT * FROM users WHERE username = ?', [username]);
@@ -42,14 +40,14 @@ app.post('/api/register', async (req, res) => {
         await db.run('INSERT INTO users (username, pass) VALUES (?, ?)', [username, hashedPassword]);
         res.status(201).json({ message: 'Registration successful' });
     } catch (err) {
-        console.error('Error during registration:', err); // Add detailed logging
+        console.error('Error during registration:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
 // **Login**
 app.post('/api/login', async (req, res) => {
-    const { username, pass } = req.body; // Use correct field name
+    const { username, pass } = req.body;
     try {
         const db = await dbPromise;
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
@@ -60,11 +58,10 @@ app.post('/api/login', async (req, res) => {
 
         res.json({ userId: user.id });
     } catch (err) {
-        console.error('Error during login:', err); // Add detailed logging
+        console.error('Error during login:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });
-
 
 // **Delete Account**
 app.delete('/api/users/:id', async (req, res) => {
@@ -93,7 +90,6 @@ wss.on('connection', (ws) => {
     ws.on('message', (data) => {
         try {
             const messageData = JSON.parse(data); // Parse the incoming message
-
             console.log('Message received:', messageData);
 
             // Broadcast the message to all connected clients
@@ -113,13 +109,7 @@ wss.on('connection', (ws) => {
     });
 });
 
-// Start the server
-server.listen(9876, () => {
-    console.log(`WebSocket server running on ws://localhost:9876`);
-});
-
-
-// Start the combined server
+// Start the combined server (Express + WebSocket)
 server.listen(port, () => {
     console.log(`Express server running on http://localhost:${port}`);
     console.log(`WebSocket server running on ws://localhost:${port}`);

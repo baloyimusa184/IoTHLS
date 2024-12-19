@@ -1,4 +1,3 @@
-
 // Register
 document.getElementById('registerForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -44,7 +43,7 @@ document.getElementById('loginForm')?.addEventListener('submit', async (event) =
         console.error('Error during login:', err);
     }
 });
-;
+
 let ws;
 let wsInitialized = false;
 
@@ -112,72 +111,6 @@ sendButton?.addEventListener('click', () => {
     }
 });
 
-/*
-let ws;
-let wsInitialized = false;
-
-function initializeWebSocket() {
-    ws = new WebSocket('ws://localhost:9876');
-
-    ws.onopen = () => {
-        console.log('WebSocket connection opened');
-        const username = sessionStorage.getItem('username');
-        if (username) {
-            ws.send(JSON.stringify({ sender: 'Server', message: `${username} has joined the chat.` }));
-        }
-    };
-
-    ws.onmessage = (event) => {
-        const messageData = JSON.parse(event.data);
-        const messageDiv = document.createElement('div');
-        const timestamp = new Date(messageData.timestamp).toLocaleTimeString();
-        messageDiv.textContent = `[${timestamp}] ${messageData.sender}: ${messageData.message}`;
-        document.getElementById('chatBox').appendChild(messageDiv);
-        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
-    };
-
-    ws.onclose = (event) => {
-        console.error('WebSocket closed. Reconnecting...', event.reason);
-        setTimeout(initializeWebSocket, 9876); // Reconnect after 3 seconds
-    };
-
-    ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-    };
-}
-
-if (!wsInitialized) {
-    initializeWebSocket();
-    wsInitialized = true;
-}
-
-function sendMessage(message) {
-    if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(message));
-    } else {
-        console.error('WebSocket is not open:', ws.readyState);
-        alert('Unable to send message. WebSocket is disconnected.');
-    }
-}
-
-const sendButton = document.getElementById('sendButton');
-const messageInput = document.getElementById('messageInput');
-const chatBox = document.getElementById('chatBox');
-
-sendButton?.addEventListener('click', () => {
-    const message = {
-        sender: sessionStorage.getItem('username'),
-        message: messageInput.value.trim(),
-    };
-
-    if (message.message) {
-        sendMessage(message);
-        messageInput.value = ''; // Clear input field after sending
-    }
-});
-
-*/
-
 document.getElementById('logoutButton')?.addEventListener('click', () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.close(); // Close the WebSocket connection
@@ -205,4 +138,3 @@ document.getElementById('deleteAccountButton')?.addEventListener('click', async 
         }
     }
 });
-
