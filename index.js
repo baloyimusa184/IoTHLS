@@ -11,6 +11,8 @@ import http from 'http';
 
 const app = express();
 const port = 9876;
+const http = require('http');
+
 
 // Middleware
 app.use(bodyParser.json());
@@ -79,7 +81,7 @@ app.delete('/api/users/:id', async (req, res) => {
 // Create an HTTP server
 const server = http.createServer(app);
 
-// WebSocket server
+// Create the WebSocket server
 const wss = new WebSocketServer({ server });
 
 let connectedClients = [];
@@ -97,7 +99,7 @@ wss.on('connection', (ws) => {
             // Broadcast the message to all connected clients
             connectedClients.forEach((client) => {
                 if (client.readyState === client.OPEN) {
-                    client.send(JSON.stringify(messageData));
+                    client.send(JSON.stringify(messageData)); // Broadcast to all
                 }
             });
         } catch (err) {
@@ -109,6 +111,11 @@ wss.on('connection', (ws) => {
         console.log('Client disconnected');
         connectedClients = connectedClients.filter((client) => client !== ws);
     });
+});
+
+// Start the server
+server.listen(9876, () => {
+    console.log(`WebSocket server running on ws://localhost:9876`);
 });
 
 

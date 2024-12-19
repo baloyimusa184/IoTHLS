@@ -1,3 +1,4 @@
+
 // Register
 document.getElementById('registerForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -43,29 +44,72 @@ document.getElementById('loginForm')?.addEventListener('submit', async (event) =
         console.error('Error during login:', err);
     }
 });
-wss.on('connection', (ws) => {
-    console.log('New WebSocket client connected');
-    connectedClients.push(ws);
+;
+let ws;
+let wsInitialized = false;
 
-    ws.on('message', (data) => {
-        try {
-            const messageData = JSON.parse(data);
+// Initialize WebSocket connection
+function initializeWebSocket() {
+    ws = new WebSocket('ws://localhost:9876');
 
-            // Broadcast the message to all connected clients
-            connectedClients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(JSON.stringify(messageData));
-                }
-            });
-        } catch (err) {
-            console.error('Error processing message:', err);
+    ws.onopen = () => {
+        console.log('WebSocket connection opened');
+        const username = sessionStorage.getItem('username');
+        if (username) {
+            ws.send(JSON.stringify({ sender: 'Server', message: `${username} has joined the chat.` }));
         }
-    });
+    };
 
-    ws.on('close', () => {
-        console.log('Client disconnected');
-        connectedClients = connectedClients.filter((client) => client !== ws); // Remove disconnected client
-    });
+    ws.onmessage = (event) => {
+        const messageData = JSON.parse(event.data);
+        const messageDiv = document.createElement('div');
+        const timestamp = new Date(messageData.timestamp).toLocaleTimeString();
+        messageDiv.textContent = `[${timestamp}] ${messageData.sender}: ${messageData.message}`;
+        document.getElementById('chatBox').appendChild(messageDiv);
+        document.getElementById('chatBox').scrollTop = document.getElementById('chatBox').scrollHeight;
+    };
+
+    ws.onclose = (event) => {
+        console.error('WebSocket closed. Reconnecting...', event.reason);
+        setTimeout(initializeWebSocket, 3000); // Try to reconnect after 3 seconds
+    };
+
+    ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
+}
+
+// Ensure WebSocket is initialized only once
+if (!wsInitialized) {
+    initializeWebSocket();
+    wsInitialized = true;
+}
+
+// Function to send messages via WebSocket
+function sendMessage(message) {
+    if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(message));
+    } else {
+        console.error('WebSocket is not open:', ws.readyState);
+        alert('Unable to send message. WebSocket is disconnected.');
+    }
+}
+
+const sendButton = document.getElementById('sendButton');
+const messageInput = document.getElementById('messageInput');
+const chatBox = document.getElementById('chatBox');
+
+sendButton?.addEventListener('click', () => {
+    const message = {
+        sender: sessionStorage.getItem('username'),
+        message: messageInput.value.trim(),
+        timestamp: new Date().toISOString(), // Include a timestamp
+    };
+
+    if (message.message) {
+        sendMessage(message); // Send the message via WebSocket
+        messageInput.value = ''; // Clear input field after sending
+    }
 });
 
 /*
@@ -132,6 +176,8 @@ sendButton?.addEventListener('click', () => {
     }
 });
 
+*/
+
 document.getElementById('logoutButton')?.addEventListener('click', () => {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.close(); // Close the WebSocket connection
@@ -160,4 +206,3 @@ document.getElementById('deleteAccountButton')?.addEventListener('click', async 
     }
 });
 
-*/
